@@ -6,6 +6,9 @@ const livroSchema = new mongoose.Schema(
     titulo: {
       type: String, 
       required: [true, "O título do livro é obrigatório"]},
+    preco: {
+      type: Number,
+      required: [true, "O preço do livro é obrigatório"]},
     autor: {
       type: mongoose.Schema.Types.ObjectId, 
       ref: 'autores', 
