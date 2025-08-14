@@ -1,4 +1,4 @@
-import autores from "../models/Autor.js";
+import { autores }  from "../models/index.js";
 import NaoEncontrado from "../Erros/NaoEncontrado.js";
 
 class AutorController {
