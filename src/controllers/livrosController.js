@@ -1,5 +1,5 @@
 import NaoEncontrado from "../Erros/NaoEncontrado.js";
-import { livros } from "../models/index.js";
+import { livros, autores } from "../models/index.js";
 
 class LivroController {
 
@@ -77,22 +77,53 @@ class LivroController {
     }
   }
 
-  static listarLivroPorEditora = async (req, res, next) => {
+  static listarLivroPorFiltro = async (req, res, next) => {
     try {
-      const editora = req.query.editora;
+      const busca = await processaBusca(req.query);
 
-      const livroResultado = await livros.find({"editora": editora});
+      if (busca !== null) {
+        const livroResultado = await livros
+        .find(busca)
+        .populate("autor");
 
-      if (livroResultado != null) {
-        res.status(200).send(livrosResultado);
-      } else {
-        next(new NaoEncontrado("Essa editora não possui nenhum livro cadastrado"))
+        if (livroResultado != null) {
+          res.status(200).send(livroResultado);
+        } else {
+        next(new NaoEncontrado("Essa busca não possui nenhum livro correspondente"))
+        }
       }
+       
     } catch (erro) {
       next(erro);
     }
-  }
-
+  } 
 }
 
-export default LivroController
+async function processaBusca(parametros) {
+  const { editora, titulo, minPaginas, maxPaginas, nomeAutor } = parametros;
+
+  let busca = {};
+
+  if (editora) busca.editora = editora;
+  if (titulo) busca.titulo = { $regex: titulo, $options: "i" };
+
+  if (minPaginas || maxPaginas) busca.numeroPaginas = {};
+
+  if (minPaginas) busca.numeroPaginas.$gte = minPaginas;
+  if (maxPaginas) busca.numeroPaginas.$lte = maxPaginas;
+
+    if (nomeAutor) {
+        const autor = await autores.findOne({ nome: nomeAutor });
+
+    if (autor !== null) {
+      busca.autor = autor._id;
+    } else {
+      busca = null;
+    }
+  }
+  
+
+  return busca;
+}
+
+export default LivroController;
